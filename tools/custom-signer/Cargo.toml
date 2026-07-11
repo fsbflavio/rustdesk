@@ -1,0 +1,17 @@
+# Standalone helper to generate a signing key and sign `custom.txt` for a custom fork.
+# Its own [workspace] table keeps it OUT of the parent rustdesk workspace, so it neither
+# affects the main build nor requires editing the root Cargo.toml (minimises merge conflicts).
+[package]
+name = "custom-signer"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+# Same crypto crate the client uses (sodiumoxide::crypto::sign), so the produced
+# custom.txt validates byte-for-byte against read_custom_client()'s sign::verify.
+sodiumoxide = "0.2"
+base64 = "0.22"
+serde_json = "1"

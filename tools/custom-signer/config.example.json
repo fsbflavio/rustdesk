@@ -1,0 +1,9 @@
+{
+  "app-name": "ProDesk",
+  "override-settings": {
+    "custom-rendezvous-server": "rs.mycompany.com",
+    "relay-server": "rs.mycompany.com",
+    "api-server": "https://rs.mycompany.com:21114",
+    "key": "SERVER_PUBLIC_KEY_BASE64=="
+  }
+}

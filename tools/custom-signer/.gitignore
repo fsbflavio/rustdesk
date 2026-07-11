@@ -1,0 +1,7 @@
+# Never commit signing material, real configs, or generated artifacts.
+*.key
+custom.txt
+config.json
+*-config.json
+/target
+Cargo.lock
