@@ -17,7 +17,10 @@ const APP_METADATA: &[u8] = include_bytes!("../app_metadata.toml");
 const APP_METADATA: &[u8] = &[];
 const APP_METADATA_CONFIG: &str = "meta.toml";
 const META_LINE_PREFIX_TIMESTAMP: &str = "timestamp = ";
-const APP_PREFIX: &str = "rustdesk";
+// CUSTOM FORK: portable extraction dir under %LOCALAPPDATA%\<APP_PREFIX>. Must be unique
+// vs the official "rustdesk" so your portable build never collides with an official
+// portable/installed copy on the same machine. Change to your own lowercase brand.
+const APP_PREFIX: &str = "prodesk";
 const APPNAME_RUNTIME_ENV_KEY: &str = "RUSTDESK_APPNAME";
 #[cfg(windows)]
 const SET_FOREGROUND_WINDOW_ENV_KEY: &str = "SET_FOREGROUND_WINDOW";
