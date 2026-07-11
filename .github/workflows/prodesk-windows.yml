@@ -14,7 +14,7 @@ on:
   push:
     branches: [custom-build]
     paths-ignore:
-      - "CUSTOMIZATION.md"
+      - "customize/**"
       - "tools/**"
 
 env:

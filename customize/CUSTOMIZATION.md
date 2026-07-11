@@ -26,7 +26,9 @@ runtime from `custom.txt`'s `app-name` — **no code change** for it.
    ```rust
    const APP_PREFIX: &str = "myapp";
    ```
-   (Optionally rename the shipped exe to `myapp.exe`.)
+   The built binary **must** be named `<AppName>.exe` (e.g. `MyApp.exe`) — RustDesk derives the
+   install path, service, and `is_installed()` from it. The CI build renames `rustdesk.exe`
+   accordingly; if it stays `rustdesk.exe`, install/uninstall break (see `DISCOVERIES.md` §4).
 
 2. **Generate your signing key** and paste the public key into `src/common.rs`:
    ```
@@ -72,6 +74,14 @@ top-level extra key into `HARD_SETTINGS`, which is what the gates below read):
 | unset | Normal bidirectional. |
 
 Not a code change — since you control the signing key, just add `conn-type` to the JSON and re-sign.
+
+### `disable-installation` — portable-only (hide the install button)
+
+Top-level `"disable-installation": "Y"` hides the install banner **and** disables every install path
+(the in-app button, the rename-to-`*install.exe` trick, and `--silent-install`). Use it for a pure
+portable build so users can't accidentally install (which would otherwise create a portable-vs-installed
+identity clash). To keep an install-capable build, ship a **separate** build *without* this flag.
+(See `DISCOVERIES.md` §7.)
 
 > Not settable via `custom.txt`: the **top logo and app icons** are compile-time Flutter/resource
 > assets. Add `flutter/assets/logo.png` (optional `logo_light.png` / `logo_dark.png`, max 300x60);
