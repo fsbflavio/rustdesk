@@ -137,6 +137,13 @@ jobs:
             Write-Host "WARNING: no custom.txt at repo root -> portable exe runs as plain RustDesk (no ProDesk isolation)."
           }
 
+          # Rename the binary to <app-name>.exe so installed mode works. RustDesk derives the
+          # installed exe path as "<InstallLocation>\<app_name>.exe" (get_install_info); if the file
+          # is still rustdesk.exe, is_installed() is false, the service binpath/shortcuts point at a
+          # missing ProDesk.exe, and uninstall breaks. Must match the custom.txt "app-name" exactly.
+          Rename-Item "$rel/rustdesk.exe" "ProDesk.exe"
+          Write-Host "Renamed rustdesk.exe -> ProDesk.exe"
+
       - name: Find Runner.res (exe icon/version)
         continue-on-error: true
         shell: bash
@@ -151,7 +158,7 @@ jobs:
           cd libs/portable
           # generate.py brotli-compresses the folder into data.bin, then cargo-builds the packer
           # (include_bytes!(../data.bin)) => one self-contained exe.
-          python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release -o . -e ../../flutter/build/windows/x64/runner/Release/rustdesk.exe
+          python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release -o . -e ../../flutter/build/windows/x64/runner/Release/ProDesk.exe
           cd ../..
           mkdir -p dist
           # Name it *without* an 'install.exe' suffix so double-click RUNS portable (a *-install.exe
