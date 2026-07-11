@@ -9,6 +9,13 @@ name: ProDesk Windows x64
 
 on:
   workflow_dispatch:
+  # Push trigger scoped to this fork branch so a push kicks off the build without
+  # needing the workflow on the default branch. Remove once you're done testing.
+  push:
+    branches: [custom-build]
+    paths-ignore:
+      - "CUSTOMIZATION.md"
+      - "tools/**"
 
 env:
   SCITER_RUST_VERSION: "1.75"
