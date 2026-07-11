@@ -1,5 +1,6 @@
 {
   "app-name": "ProDesk",
+  "conn-type": "incoming",
   "override-settings": {
     "custom-rendezvous-server": "rs.mycompany.com",
     "relay-server": "rs.mycompany.com",

@@ -45,6 +45,7 @@ runtime from `custom.txt`'s `app-name` — **no code change** for it.
    ```json
    {
      "app-name": "MyApp",
+     "conn-type": "incoming",
      "override-settings": {
        "custom-rendezvous-server": "rs.mycompany.com",
        "relay-server": "rs.mycompany.com",
@@ -58,6 +59,24 @@ runtime from `custom.txt`'s `app-name` — **no code change** for it.
      coexistence.**
    - `override-settings` = forced & never persisted (locks the field, ideal for pinning the server).
      Use `default-settings` instead if you want a changeable default.
+
+### `conn-type` — receive-only / send-only (like the Pro custom client)
+
+`conn-type` is a **top-level** key (NOT inside `override-settings`; `read_custom_client` puts any
+top-level extra key into `HARD_SETTINGS`, which is what the gates below read):
+
+| value | behavior |
+|-------|----------|
+| `"incoming"` | **Receive-only.** The device can only *be controlled*. Outgoing connections are refused at the connection layer (`client.rs` `is_incoming_only()` → `bail!("Incoming only mode")`) and the connect UI is hidden. The `--service`/CM path is kept so it can still accept sessions. |
+| `"outgoing"` | **Send-only.** Can only control others; cannot be controlled. Upstream also skips creating the service in this mode. |
+| unset | Normal bidirectional. |
+
+Not a code change — since you control the signing key, just add `conn-type` to the JSON and re-sign.
+
+> Not settable via `custom.txt`: the **top logo and app icons** are compile-time Flutter/resource
+> assets. Add `flutter/assets/logo.png` (optional `logo_light.png` / `logo_dark.png`, max 300x60);
+> `flutter/assets/` is already globbed in `pubspec.yaml`, so no pubspec/code change. Other icons:
+> `flutter/windows/runner/resources/app_icon.ico`, `res/tray-icon.ico`, `res/icon.*`.
 
 4. Sign it:
    ```
