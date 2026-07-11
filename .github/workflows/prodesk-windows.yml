@@ -114,28 +114,53 @@ jobs:
             exit 1
           fi
 
-      - name: Build rustdesk
+      - name: Build rustdesk (unpacked folder) + stage files
         run: |
+          # --skip-portable-pack: build only the app folder so we can inject files before packing
           python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
-          mv ./flutter/build/windows/x64/runner/Release ./rustdesk
+          $rel = "flutter/build/windows/x64/runner/Release"
 
           # usbmmidd (virtual display helper), mirrors upstream Windows packaging
           Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
           Expand-Archive usbmmidd_v2.zip -DestinationPath .
           Remove-Item -Path usbmmidd_v2\Win32 -Recurse
           Remove-Item -Path "usbmmidd_v2\deviceinstaller64.exe", "usbmmidd_v2\deviceinstaller.exe", "usbmmidd_v2\usbmmidd.bat"
-          mv -Force .\usbmmidd_v2 ./rustdesk
+          mv -Force .\usbmmidd_v2 "$rel"
 
-      - name: Bundle custom.txt (optional)
-        # If you commit a custom.txt into the repo root it ships beside the exe; otherwise
-        # download it into ./rustdesk locally to test app-name/server isolation at runtime.
+          # custom.txt MUST be embedded: the portable exe extracts to %LOCALAPPDATA%\prodesk and
+          # reads custom.txt from THERE, not beside the launcher. Commit a signed custom.txt to the
+          # repo root to bake in app-name/server. Without it the exe runs as plain RustDesk.
+          if (Test-Path custom.txt) {
+            Copy-Item custom.txt "$rel/custom.txt"
+            Write-Host "Embedded custom.txt (ProDesk app-name/server overlay will be active)."
+          } else {
+            Write-Host "WARNING: no custom.txt at repo root -> portable exe runs as plain RustDesk (no ProDesk isolation)."
+          }
+
+      - name: Find Runner.res (exe icon/version)
         continue-on-error: true
         shell: bash
         run: |
-          if [ -f custom.txt ]; then cp custom.txt ./rustdesk/custom.txt; echo "bundled custom.txt"; else echo "no custom.txt in repo (add it beside the exe when testing)"; fi
+          res=$(find . -name Runner.res | head -1)
+          if [ -n "$res" ]; then cp "$res" ./libs/portable/Runner.res; echo "copied $res"; else echo "Runner.res not found"; fi
 
-      - name: Upload artifact
+      - name: Pack single self-extracting portable exe
+        shell: bash
+        run: |
+          pip3 install -r libs/portable/requirements.txt
+          cd libs/portable
+          # generate.py brotli-compresses the folder into data.bin, then cargo-builds the packer
+          # (include_bytes!(../data.bin)) => one self-contained exe.
+          python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release -o . -e ../../flutter/build/windows/x64/runner/Release/rustdesk.exe
+          cd ../..
+          mkdir -p dist
+          # Name it *without* an 'install.exe' suffix so double-click RUNS portable (a *-install.exe
+          # name would trigger the installer flow instead).
+          mv ./target/release/rustdesk-portable-packer.exe ./dist/ProDesk-portable.exe
+          ls -la dist
+
+      - name: Upload single portable exe
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: prodesk-windows-x64
-          path: rustdesk
+          name: prodesk-portable-exe
+          path: dist/ProDesk-portable.exe
